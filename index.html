@@ -93,18 +93,24 @@
     .header { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 40px; text-align: center; }
     
     .logo-container {
+      width: 96px; 
+      height: 96px; 
+      background: #ffffff; /* Logo ke peeche white background fix karega */
+      border-radius: 50%; /* Perfect Circle (Gol) banayega */
       display: flex; 
       align-items: center; 
       justify-content: center;
-      margin-bottom: 8px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4); 
+      border: 3px solid var(--bg-base); /* Circle ke andar thoda gap */
+      outline: 2px solid var(--primary); /* Profile Picture jaisi Orange Ring */
+      margin-bottom: 12px;
+      overflow: hidden;
     }
     
     .logo-container img { 
-      height: 85px; /* Ye height tum apne logo ke hisaab se kam/zyada kar sakte ho */
-      width: auto; 
-      max-width: 280px; 
+      width: 80%; /* Logo circle ke kinaroo se na kate, isliye thoda andar rakha hai */
+      height: 80%; 
       object-fit: contain; 
-      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); /* Premium 3D effect */
     }
     
     .headline { font-size: clamp(26px, 6vw, 36px); font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.2; }
@@ -193,7 +199,7 @@
       <img src="logo.png" alt="RJ Mobile" onerror="this.style.display='none'" />
     </div>
     <h1 class="headline">Find Our <em class="brand-title">Branches</em></h1>
-    <p class="subline">Tap a branch below to view its location instantly on Google Maps.</p>
+    <p class="subline">Tap a branch below to view its location<br>instantly on Google Maps.</p>
   </header>
 
   <div class="links-card" id="locationsContainer">
