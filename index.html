@@ -93,26 +93,24 @@
     .header { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 40px; text-align: center; }
     
     .logo-container {
-      width: 110px; 
-      height: 110px; 
-      background: var(--card-bg); 
-      border-radius: 50%; /* Ye property isko perfect Circle banayegi */
       display: flex; 
       align-items: center; 
       justify-content: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4); 
-      border: 2px solid var(--primary); /* Chaaro taraf ek premium orange ring */
-      margin-bottom: 16px;
-      overflow: hidden; /* Circle ke bahar jo bhi jayega wo automatically cut jayega */
-      flex-shrink: 0;
+      margin-bottom: 8px;
     }
     
     .logo-container img { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; /* Circle ko bina stretch kiye pura bhar dega */
+      height: 85px; /* Ye height tum apne logo ke hisaab se kam/zyada kar sakte ho */
+      width: auto; 
+      max-width: 280px; 
+      object-fit: contain; 
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); /* Premium 3D effect */
     }
     
+    .headline { font-size: clamp(26px, 6vw, 36px); font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.2; }
+    .headline em { font-style: normal; color: var(--primary); }
+    .subline { font-size: 15px; color: var(--text-soft); line-height: 1.6; max-width: 400px; font-weight: 500; }
+
     /* =========================================================
        3. LINKS CARD & BUTTONS
        ========================================================= */
@@ -189,8 +187,16 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
   </button>
 
+  <!-- Restored Header with Logo and Title -->
   <header class="header">
-    <div class="links-card" id="locationsContainer">
+    <div class="logo-container">
+      <img src="logo.png" alt="RJ Mobile" onerror="this.style.display='none'" />
+    </div>
+    <h1 class="headline">Find Our <em class="brand-title">Branches</em></h1>
+    <p class="subline">Tap a branch below to view its location instantly on Google Maps.</p>
+  </header>
+
+  <div class="links-card" id="locationsContainer">
 
     <button class="location-action-btn find-nearest-btn" onclick="findNearestBranch(this)">
       <div class="location-info">
