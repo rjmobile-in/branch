@@ -387,24 +387,23 @@
         branch.setAttribute('data-distance', distanceInMeters); 
         
         const titleEl = branch.querySelector('.btn-title');
-        const km = (distanceInMeters / 1000).toFixed(1);
-        titleEl.innerHTML += ` <span class="distance-badge">${km} km</span>`;
+        
+        // Smart Distance Logic
+        let distanceText = "";
+        if (distanceInMeters < 50) {
+          // 50 meter se kam pe "You're here"
+          distanceText = "📍 You're Here";
+        } else if (distanceInMeters < 1000) {
+          // 1 km se kam pe sirf Meters (e.g. 450 m)
+          distanceText = `${Math.round(distanceInMeters)} m`;
+        } else {
+          // 1 km se zyada pe Kilometers (e.g. 2.4 km)
+          distanceText = `${(distanceInMeters / 1000).toFixed(1)} km`;
+        }
+        
+        titleEl.innerHTML += ` <span class="distance-badge">${distanceText}</span>`;
       });
 
-      branches.sort((a, b) => parseFloat(a.getAttribute('data-distance')) - parseFloat(b.getAttribute('data-distance')));
-
-      const container = document.getElementById('locationsContainer');
-      branches.forEach(branch => container.appendChild(branch));
-
-      if (branches.length > 0) {
-        const closestBranch = branches[0];
-        closestBranch.classList.add('is-nearest');
-        const nearestBadge = closestBranch.querySelector('.distance-badge');
-        nearestBadge.classList.add('nearest-badge');
-      }
-
-      distancesCalculated = true;
-    }
 
     function findNearestBranch(btn) {
       if (distancesCalculated) {
