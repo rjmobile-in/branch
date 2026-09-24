@@ -93,18 +93,25 @@
     .header { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 40px; text-align: center; }
     
     .logo-container {
-      width: 88px; height: 88px; 
+      width: 110px; 
+      height: 110px; 
       background: var(--card-bg); 
-      border-radius: var(--radius-lg);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: var(--shadow-md); border: 1px solid var(--card-border);
-      flex-shrink: 0; margin-bottom: 8px;
+      border-radius: 50%; /* Ye property isko perfect Circle banayegi */
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4); 
+      border: 2px solid var(--primary); /* Chaaro taraf ek premium orange ring */
+      margin-bottom: 16px;
+      overflow: hidden; /* Circle ke bahar jo bhi jayega wo automatically cut jayega */
+      flex-shrink: 0;
     }
-    .logo-container img { width: 70%; height: 70%; object-fit: contain; }
     
-    .headline { font-size: clamp(26px, 6vw, 36px); font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; line-height: 1.2; }
-    .headline em { font-style: normal; color: var(--primary); }
-    .subline { font-size: 15px; color: var(--text-soft); line-height: 1.6; max-width: 400px; font-weight: 500; }
+    .logo-container img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; /* Circle ko bina stretch kiye pura bhar dega */
+    }
     
     /* =========================================================
        3. LINKS CARD & BUTTONS
@@ -183,14 +190,7 @@
   </button>
 
   <header class="header">
-    <div class="logo-container">
-      <img src="logo.png" alt="RJ Mobile" onerror="this.style.display='none'" />
-    </div>
-    <h1 class="headline">Find Our <em class="brand-title">Branches</em></h1>
-    <p class="subline">Tap a branch below to view its location instantly on Google Maps.</p>
-  </header>
-
-  <div class="links-card" id="locationsContainer">
+    <div class="links-card" id="locationsContainer">
 
     <button class="location-action-btn find-nearest-btn" onclick="findNearestBranch(this)">
       <div class="location-info">
@@ -204,6 +204,7 @@
       </div>
     </button>
     
+    <!-- DCM Branch -->
     <button class="location-action-btn branch-btn" data-lat="26.8997" data-lng="75.7656" onclick="openLocation(this, 'DCM Branch', 'https://www.google.com/maps/search/?api=1&query=26.8997,75.7656')">
       <div class="location-info">
         <div class="location-icon">
@@ -211,12 +212,13 @@
         </div>
         <div class="btn-text-group">
           <span class="btn-title">DCM Branch</span>
-          <span class="btn-subtitle">Ajmer Road, DCM Area, Jaipur</span>
+          <span class="btn-subtitle">Shop No. 2, Ajmer Rd, near om sweets, Teachers Colony, DCM, Jaipur, Rajasthan 302021</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
     </button>
 
+    <!-- Jhotwara Branch -->
     <button class="location-action-btn branch-btn" data-lat="26.9388" data-lng="75.7489" onclick="openLocation(this, 'Jhotwara Branch', 'https://www.google.com/maps/search/?api=1&query=26.9388,75.7489')">
       <div class="location-info">
         <div class="location-icon">
@@ -224,72 +226,77 @@
         </div>
         <div class="btn-text-group">
           <span class="btn-title">Jhotwara Branch</span>
-          <span class="btn-subtitle">Main Market, Jhotwara, Jaipur</span>
+          <span class="btn-subtitle">Kanta Chauraha, Scheme No 12, Kalyan Kunj, Kalwad Road, Jhotwara, Jaipur, Rajasthan 302012</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
     </button>
 
-    <button class="location-action-btn branch-btn" data-lat="26.970981" data-lng="75.770674" onclick="openLocation(this, 'Murlipura 1 Number', 'https://maps.app.goo.gl/fbznL2wGQ7F3tvUp9')">
+    <!-- Murlipura 1 Number -->
+    <button class="location-action-btn branch-btn" data-lat="26.970981" data-lng="75.770674" onclick="openLocation(this, 'Murlipura 1 Number Branch', 'https://maps.app.goo.gl/fbznL2wGQ7F3tvUp9')">
       <div class="location-info">
         <div class="location-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         </div>
         <div class="btn-text-group">
-          <span class="btn-title">Murlipura, 1 Number</span>
-          <span class="btn-subtitle">Shop no 12, Kedia Palace Rd, Shiv Nagar-1, Jaipur</span>
+          <span class="btn-title">Murlipura, Road Number 1 Branch</span>
+          <span class="btn-subtitle">Shop no 12, Kedia Palace Road, Shiv Nagar-1, Murlipura, Jaipur, Rajasthan 302039</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
     </button>
 
-    <button class="location-action-btn branch-btn" data-lat="27.001164" data-lng="75.794941" onclick="openLocation(this, 'VKI 17 Number', 'https://maps.app.goo.gl/VCL5GzwvVGYJqTvq5')">
+    <!-- VKI 17 Number -->
+    <button class="location-action-btn branch-btn" data-lat="27.001164" data-lng="75.794941" onclick="openLocation(this, 'VKI 17 Number Branch', 'https://maps.app.goo.gl/VCL5GzwvVGYJqTvq5')">
       <div class="location-info">
         <div class="location-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         </div>
         <div class="btn-text-group">
-          <span class="btn-title">VKI, 17 Number</span>
-          <span class="btn-subtitle">Shop No. 182, Road No. 17, J.S.Colony, VKI Area, Jaipur</span>
+          <span class="btn-title">VKI, Road Number 17 Branch</span>
+          <span class="btn-subtitle">RJ Mobile Shop No. 182, Road No. 17, Shree Ram Nagar - B, Bhrigu Marg, J.S.Colony, Vishwakarma Industrial Area, Jaipur, Rajasthan 302013</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
     </button>
 
-    <button class="location-action-btn branch-btn" data-lat="26.948108" data-lng="75.796868" onclick="openLocation(this, 'Shastri Nagar', 'https://maps.app.goo.gl/MhjdV4T5RtG7V2cPA')">
+    <!-- Shastri Nagar -->
+    <button class="location-action-btn branch-btn" data-lat="26.948108" data-lng="75.796868" onclick="openLocation(this, 'Shastri Nagar Branch', 'https://maps.app.goo.gl/MhjdV4T5RtG7V2cPA')">
       <div class="location-info">
         <div class="location-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         </div>
         <div class="btn-text-group">
-          <span class="btn-title">Shastri Nagar</span>
-          <span class="btn-subtitle">Front of BOB bank, A59, near Kanwatia Circle, Jaipur</span>
+          <span class="btn-title">Shastri Nagar Branch</span>
+          <span class="btn-subtitle">In Front of BOB bank, A59, Major Shaitan Singh Colony, Shastri Nagar, Jaipur, Rajasthan 302016</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
     </button>
 
+    <!-- Lohamandi -->
     <button class="location-action-btn branch-btn" data-lat="26.995372" data-lng="75.766264" onclick="openLocation(this, 'Lohamandi Branch', 'https://maps.app.goo.gl/qdBwqJGh7jVdHELk9')">
       <div class="location-info">
         <div class="location-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         </div>
         <div class="btn-text-group">
-          <span class="btn-title">Lohamandi</span>
-          <span class="btn-subtitle">Shop No. A-6, Krishna Market, New Loha Mandi Rd, Jaipur</span>
+          <span class="btn-title">Loha Mandi Branch</span>
+          <span class="btn-subtitle">Shop No. A-6, Krishna Market, New Loha Mandi Road, Harmada, Jaipur, Rajasthan 302013</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
     </button>
 
-    <button class="location-action-btn branch-btn" data-lat="26.982277" data-lng="75.771452" onclick="openLocation(this, 'Murlipura 6 Number', 'https://maps.app.goo.gl/1hKXksoent3QnRTz9')">
+    <!-- Murlipura 6 Number -->
+    <button class="location-action-btn branch-btn" data-lat="26.982277" data-lng="75.771452" onclick="openLocation(this, 'Murlipura 6 Number Branch', 'https://maps.app.goo.gl/1hKXksoent3QnRTz9')">
       <div class="location-info">
         <div class="location-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         </div>
         <div class="btn-text-group">
-          <span class="btn-title">Murlipura, 6 Number</span>
-          <span class="btn-subtitle">29-A, Rd Number 6, opp. Cks Hospital, VKI Area, Jaipur</span>
+          <span class="btn-title">Murlipura, Road Number 6 Branch</span>
+          <span class="btn-subtitle">Road Number 6, Opposite CKS Hospital, Murlipura, Jaipur, Rajasthan 302039</span>
         </div>
       </div>
       <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
