@@ -351,7 +351,7 @@
       let originalText = titleEl.textContent;
       if (badge) originalText = originalText.replace(badge.textContent, '').trim();
       
-      titleEl.innerHTML = 'Opening...' + badgeHTML;
+      titleEl.innerHTML = 'Opening... ' + badgeHTML;
       btn.style.borderColor = 'var(--primary)';
       btn.style.background = 'var(--card-bg)';
       
@@ -360,7 +360,7 @@
       setTimeout(() => {
         window.open(url, '_blank', 'noopener,noreferrer');
         setTimeout(() => {
-          titleEl.innerHTML = originalText + badgeHTML;
+          titleEl.innerHTML = originalText + ' ' + badgeHTML;
           btn.style.borderColor = '';
           btn.style.background = '';
           allBtns.forEach(b => b.disabled = false);
@@ -370,14 +370,14 @@
 
     function calculateStraightLine(lat1, lon1, lat2, lon2) {
       const R = 6371e3; 
-      const phi1 = lat1 * Math.PI/180;
-      const phi2 = lat2 * Math.PI/180;
-      const deltaPhi = (lat2-lat1) * Math.PI/180;
-      const deltaLambda = (lon2-lon1) * Math.PI/180;
-      const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+      const phi1 = lat1 * Math.PI / 180;
+      const phi2 = lat2 * Math.PI / 180;
+      const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+      const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
                 Math.cos(phi1) * Math.cos(phi2) *
-                Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c; 
     }
 
@@ -388,22 +388,41 @@
         
         const titleEl = branch.querySelector('.btn-title');
         
+        // Purana badge hatao agar pehle se ho
+        const oldBadge = titleEl.querySelector('.distance-badge');
+        if (oldBadge) oldBadge.remove();
+
         // Smart Distance Logic
         let distanceText = "";
         if (distanceInMeters < 50) {
-          // 50 meter se kam pe "You're here"
           distanceText = "📍 You're Here";
         } else if (distanceInMeters < 1000) {
-          // 1 km se kam pe sirf Meters (e.g. 450 m)
           distanceText = `${Math.round(distanceInMeters)} m`;
         } else {
-          // 1 km se zyada pe Kilometers (e.g. 2.4 km)
           distanceText = `${(distanceInMeters / 1000).toFixed(1)} km`;
         }
         
         titleEl.innerHTML += ` <span class="distance-badge">${distanceText}</span>`;
       });
 
+      // Branches ko sabse kam distance ke hisaab se sort karein
+      branches.sort((a, b) => {
+        return parseFloat(a.getAttribute('data-distance')) - parseFloat(b.getAttribute('data-distance'));
+      });
+
+      // Container mein sorted order mein wapas lagayein aur sabse paas wali branch highlight karein
+      const container = document.getElementById('locationsContainer');
+      branches.forEach((branch, index) => {
+        if (index === 0) {
+          branch.classList.add('is-nearest');
+          const badge = branch.querySelector('.distance-badge');
+          if (badge) badge.classList.add('nearest-badge');
+        }
+        container.appendChild(branch);
+      });
+
+      distancesCalculated = true;
+    } // <-- Yeh closing bracket aur upar ka sorting code missing tha
 
     function findNearestBranch(btn) {
       if (distancesCalculated) {
