@@ -482,7 +482,10 @@
   $('manual-go').addEventListener('click', () => openMaps(pendingUrl || (BRANCHES.find(b => b.id === $('branch-select').value) || {}).review));
   $('reset-btn').addEventListener('click', () => { doneState = {}; saveDone(doneState); $('manual').style.display = 'none'; restoreDone(); showToast('Progress has been reset'); });
   restoreDone();
-  if (params.has('city') || params.has('branch') || location.hash === '#connect') selectTab('connect');
+  // Landing tab: ?tab=branches or ?tab=connect wins; otherwise ?city / ?branch / #connect open "Review and follow"
+  const tabParam = (params.get('tab') || '').toLowerCase();
+  if (tabParam === 'branches') selectTab('branches');
+  else if (tabParam === 'connect' || params.has('city') || params.has('branch') || location.hash === '#connect') selectTab('connect');
   window.addEventListener('pageshow', e => { if (e.persisted) { doneState = loadDone(); restoreDone(); renderBranches(); } });
 </script>
 </body>
