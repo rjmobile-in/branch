@@ -62,6 +62,11 @@
     .search { width: 100%; margin: 14px 0 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 16px; }
     .search::placeholder { color: var(--soft); }
 
+    .cities { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+    .city-chip { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--soft); font-weight: 700; font-size: 14px; cursor: pointer; transition: transform .15s, border-color .2s, background-color .25s, color .25s; }
+    .city-chip em { font-style: normal; font-size: 12px; opacity: .8; }
+    .city-chip:hover { border-color: var(--gold); } .city-chip:active { transform: scale(.95); }
+    .city-chip[aria-pressed='true'] { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
     .list { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; list-style: none; }
     .list li + li { border-top: 1px solid var(--line); }
     .branch { padding: 18px 20px; }
@@ -185,7 +190,7 @@
     </button>
   </div>
 
-  <h1>Your nearest RJ Mobile, one tap away</h1>
+  <h1 id="h1">Your nearest RJ Mobile, one tap away</h1>
   <p class="lead">Find a branch, call or WhatsApp us, and follow our pages for offers.</p>
 
   <div class="tabs" id="tabs" data-active="branches" role="tablist">
@@ -199,6 +204,7 @@
       <span id="locate-text">Find my nearest branch</span>
     </button>
     <p id="status" class="status" role="status" aria-live="polite"></p>
+    <div id="cities" class="cities" role="group" aria-label="Filter by city"></div>
     <input id="search" class="search" type="search" placeholder="Search by area, for example Murlipura" aria-label="Search branches" autocomplete="off" />
     <ul id="list" class="list"></ul>
     <p id="empty" class="empty"></p>
@@ -255,8 +261,8 @@
     { id: 'lohamandi', city: 'jaipur', name: 'Loha Mandi', addr: 'Shop No. A-6, Krishna Market, New Loha Mandi Road, Harmada, Jaipur', lat: 26.995372, lng: 75.766264, maps: 'https://maps.app.goo.gl/qdBwqJGh7jVdHELk9', review: 'https://search.google.com/local/writereview?placeid=ChIJ7wWKoB-zbTkRuoxnfdku9EQ', alias: ['vkilohamandi'] },
     { id: 'vki6', city: 'jaipur', name: 'VKI, Road No. 6', addr: 'Opposite CKS Hospital, Road No. 6, VKI, Jaipur', lat: 26.982277, lng: 75.771452, maps: 'https://maps.app.goo.gl/1hKXksoent3QnRTz9', review: 'https://g.page/r/CZbxO8pvx8u8EBM/review', alias: [] },
     { id: 'vki17', city: 'jaipur', name: 'VKI, Road No. 17', addr: 'Bhrigu Marg, Road No. 17, Vishwakarma Industrial Area, Jaipur', lat: 27.001164, lng: 75.794941, maps: 'https://maps.app.goo.gl/VCL5GzwvVGYJqTvq5', review: 'https://g.page/r/CQOTwy2wHbcVEBM/review', alias: [] },
-    // TODO: lat/lng for Sadulpur are approximate - replace with exact coordinates from the Google Maps pin
-    { id: 'Sadulpur', city: 'rajgarh', name: 'Sadulpur', addr: 'Sadulpur, Rajgarh', lat: 28.6990, lng: 75.3820, maps: 'https://maps.app.goo.gl/vjGvBH382TWX2oBU8', review: 'https://g.page/r/CVu708z0OM1PEBM/review', alias: ['rajgarh'] }
+    // TODO: add lat/lng and the street address for Sadulpur when available
+    { id: 'Sadulpur', city: 'rajgarh', name: 'Sadulpur', addr: 'Sadulpur, Rajgarh', maps: 'https://maps.app.goo.gl/vjGvBH382TWX2oBU8', review: 'https://g.page/r/CVu708z0OM1PEBM/review', alias: ['rajgarh'] }
   ];
   const UPCOMING = [ { city: 'jaipur', name: 'Raja Park' }, { city: 'churu', name: 'Churu' } ];
 
@@ -268,6 +274,10 @@
   const cityList = (params.get('city') || '').toLowerCase().split(/[,\s|]+/).filter(Boolean);
   const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const $ = id => document.getElementById(id);
+  /* City scope: ?city=jaipur shows only Jaipur (no chips); no param or several cities show chips to switch */
+  const scopeCities = (() => { const c = cityList.filter(k => BRANCH_CITIES[k]); return c.length ? c : Object.keys(BRANCH_CITIES); })();
+  let activeCity = scopeCities.length === 1 ? scopeCities[0] : '';
+  const cityOK = c => activeCity ? c === activeCity : scopeCities.includes(c);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ============ TOAST ============ */
@@ -354,9 +364,9 @@
     // Remember where each row is now, so rows can glide to their new place after re-sorting or filtering
     const prevTop = new Map();
     $('list').querySelectorAll('li[data-id]').forEach(li => prevTop.set(li.dataset.id, li.getBoundingClientRect().top));
-    let items = BRANCHES.map(b => ({ b, d: distances && distances[b.id] != null ? distances[b.id] : null }));
+    let items = BRANCHES.filter(b => cityOK(b.city)).map(b => ({ b, d: distances && distances[b.id] != null ? distances[b.id] : null }));
     if (distances) items.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
-    const nearestId = distances && items[0].d != null ? items[0].b.id : null;
+    const nearestId = distances && items.length && items[0].d != null ? items[0].b.id : null;
     const match = s => !q || s.toLowerCase().includes(q);
 
     let html = items.filter(({ b }) => match(b.name + ' ' + b.addr)).map(({ b, d }, i) => {
@@ -373,7 +383,7 @@
           <a class="pill" href="${wa}" target="_blank" rel="noopener">${ICON_WA} WhatsApp</a>
         </div></li>`;
     }).join('');
-    html += UPCOMING.filter(u => match(u.name + ' ' + (BRANCH_CITIES[u.city] || ''))).map(u =>
+    html += UPCOMING.filter(u => cityOK(u.city) && match(u.name + ' ' + (BRANCH_CITIES[u.city] || ''))).map(u =>
       `<li class="branch soon" data-id="soon-${esc(u.name)}"><div class="name">${esc(u.name)}</div><div class="soon-note">Coming soon to ${esc(BRANCH_CITIES[u.city])}</div></li>`).join('');
 
     $('list').innerHTML = html;
@@ -393,6 +403,18 @@
     if (!html) $('empty').textContent = 'No branch matches "' + $('search').value.trim() + '". Try an area name such as Jhotwara or VKI.';
   }
   $('search').addEventListener('input', renderBranches);
+
+  function renderCities() {
+    const box = $('cities');
+    if (scopeCities.length < 2) { box.style.display = 'none'; return; }
+    const n = k => BRANCHES.filter(b => b.city === k).length;
+    const chip = (k, label, count) => `<button type="button" class="city-chip" data-city="${k}" aria-pressed="${activeCity === k}">${esc(label)}<em>${count}</em></button>`;
+    box.innerHTML = chip('', 'All', BRANCHES.filter(b => scopeCities.includes(b.city)).length) + scopeCities.map(k => chip(k, BRANCH_CITIES[k], n(k) || 'Soon')).join('');
+  }
+  $('cities').addEventListener('click', e => {
+    const b = e.target.closest('.city-chip'); if (!b) return;
+    activeCity = b.dataset.city; renderCities(); renderBranches();
+  });
 
   function setStatus(msg, err) { $('status').textContent = msg; $('status').classList.toggle('error', !!err); }
   function straightLine(lat1, lon1, lat2, lon2) {
@@ -630,7 +652,10 @@
   }
 
   /* ============ INIT ============ */
-  const footer = BRANCHES.length + ' branches' + (UPCOMING.length ? ', ' + UPCOMING.length + ' more coming soon' : '');
+  const scopedB = BRANCHES.filter(b => scopeCities.includes(b.city)), scopedU = UPCOMING.filter(u => scopeCities.includes(u.city));
+  const footer = scopedB.length + ' branches' + (scopedU.length ? ', ' + scopedU.length + ' more coming soon' : '');
+  if (scopeCities.length === 1) $('h1').textContent = 'Your nearest RJ Mobile in ' + BRANCH_CITIES[scopeCities[0]];
+  renderCities();
   $('footer').textContent = footer;
   renderBranches();
   renderSocial();
