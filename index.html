@@ -281,12 +281,19 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  /* City chips: renders a row of single-select chips, returns a function that highlights one */
-  function makeChips(id, opts, active, onPick) {
-    const el = $(id);
-    el.innerHTML = opts.map(o => `<button type="button" class="chip" data-v="${esc(o.id)}" aria-pressed="${o.id === active}">${esc(o.label)}</button>`).join('');
-    const paint = v => el.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
-    el.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { paint(b.dataset.v); onPick(b.dataset.v); }));
+  /* City chips (multi-select). `sel` is a Set; empty set = "All". Tapping All clears the set,
+     tapping any other chip toggles it, and selecting every chip is the same as All. Returns a repaint function. */
+  function makeChips(id, opts, sel, onChange) {
+    const el = $(id), others = opts.filter(o => o.id !== 'all').map(o => o.id);
+    el.innerHTML = opts.map(o => `<button type="button" class="chip" data-v="${esc(o.id)}" aria-pressed="false">${esc(o.label)}</button>`).join('');
+    const paint = () => el.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === 'all' ? !sel.size : sel.has(b.dataset.v)));
+    el.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+      const v = b.dataset.v;
+      if (v === 'all') sel.clear(); else { sel.has(v) ? sel.delete(v) : sel.add(v); }
+      if (others.every(k => sel.has(k))) sel.clear();
+      paint(); onChange();
+    }));
+    paint();
     return paint;
   }
 
@@ -356,7 +363,7 @@
   let distances = null;   // { branchId: meters }
   let animateNext = true; // entrance animation on first load only
   let flashNext = false;  // highlight the nearest branch right after locating
-  let branchCity = 'all'; // city chip above the search bar
+  const branchSel = new Set(); // cities picked in the chips above the search bar (empty = All)
   let paintBranchChips = () => {};
 
   function istMinutes() {
@@ -376,7 +383,7 @@
     // Remember where each row is now, so rows can glide to their new place after re-sorting or filtering
     const prevTop = new Map();
     $('list').querySelectorAll('li[data-id]').forEach(li => prevTop.set(li.dataset.id, li.getBoundingClientRect().top));
-    const cityOK = c => branchCity === 'all' || c === branchCity;
+    const cityOK = c => !branchSel.size || branchSel.has(c);
     let items = BRANCHES.filter(b => cityOK(b.city)).map(b => ({ b, d: distances && distances[b.id] != null ? distances[b.id] : null }));
     if (distances) items.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
     const nearestId = distances && items[0].d != null ? items[0].b.id : null;
@@ -416,7 +423,7 @@
     if (!html) $('empty').textContent = q ? 'No branch matches "' + $('search').value.trim() + '". Try an area name such as Jhotwara or VKI.' : 'No branches here yet.';
   }
   $('search').addEventListener('input', renderBranches);
-  paintBranchChips = makeChips('branch-chips', [{ id: 'all', label: 'All' }, ...Object.keys(BRANCH_CITIES).map(k => ({ id: k, label: BRANCH_CITIES[k] }))], branchCity, v => { branchCity = v; renderBranches(); });
+  paintBranchChips = makeChips('branch-chips', [{ id: 'all', label: 'All' }, ...Object.keys(BRANCH_CITIES).map(k => ({ id: k, label: BRANCH_CITIES[k] }))], branchSel, renderBranches);
 
   function setStatus(msg, err) { $('status').textContent = msg; $('status').classList.toggle('error', !!err); }
   function straightLine(lat1, lon1, lat2, lon2) {
@@ -443,7 +450,7 @@
       let arr, byRoad = true;
       try { arr = await roadDistances(lat, lng); } catch (e) { byRoad = false; arr = geoBranches.map(b => straightLine(lat, lng, b.lat, b.lng)); }
       distances = {}; geoBranches.forEach((b, i) => { distances[b.id] = arr[i]; });
-      $('search').value = ''; branchCity = 'all'; paintBranchChips('all'); flashNext = true; renderBranches();
+      $('search').value = ''; branchSel.clear(); paintBranchChips(); flashNext = true; renderBranches();
       btn.disabled = false; btn.classList.remove('loading'); label.textContent = 'Update my location';
       setStatus(byRoad ? 'Sorted by driving distance from you.' : 'Sorted by straight-line distance from you.');
     }, err => {
@@ -466,8 +473,8 @@
   const urlCities = cityList.filter(c => BRANCH_CITIES[c]);
   const scopeCities = urlCities.length ? urlCities : Object.keys(BRANCH_CITIES);
   const bpn0 = norm(params.get('branch'));
-  let followScope = cityList.includes('all') || urlCities.length > 1 ? 'all' : urlCities.length === 1 ? urlCities[0] : (BRANCH_CITIES[bpn0] ? bpn0 : 'main');
-  const accountsFor = s => s === 'main' ? [MAIN] : s === 'all' ? [MAIN, ...CITIES.filter(c => scopeCities.includes(c.id))] : CITIES.filter(c => c.id === s);
+  const followSel = new Set(cityList.includes('all') ? [] : urlCities.length ? urlCities : (BRANCH_CITIES[bpn0] ? [bpn0] : ['main']));   // empty = All
+  const accountsFor = () => { const all = !followSel.size; return [...(all || followSel.has('main') ? [MAIN] : []), ...CITIES.filter(c => scopeCities.includes(c.id) && (all || followSel.has(c.id)))]; };
   const ICONS = {
     ig: '<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>',
     yt: '<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>',
@@ -483,7 +490,7 @@
       <div class="btn-text"><span class="btn-title">${esc(title)}</span><span class="btn-sub">${esc(sub)}</span></div></div><span class="status-icon">➔</span></a>`;
   }
   function renderSocial() {
-    const accounts = accountsFor(followScope);
+    const accounts = accountsFor();
     let h = '';
     accounts.forEach(a => { const w = `https://www.instagram.com/${a.ig}/`; h += socialBtn('ig:' + a.id, ICONS.ig, 'icon-ig', w, androidIntent('instagram.com/_u/' + a.ig, 'com.instagram.android', w), `Instagram: ${a.name}`, `@${a.ig}, follow, like and add to story`); });
     accounts.forEach(a => { const w = `https://www.facebook.com/${a.fb}/`; h += socialBtn('fb:' + a.id, ICONS.fb, 'icon-fb', w, androidIntent('www.facebook.com/' + a.fb, 'com.facebook.katana', w), `Facebook: ${a.name}`, 'Follow and like'); });
@@ -576,7 +583,8 @@
   function renderReviewBranches() {
     const select = $('branch-select'), bpn = norm(params.get('branch'));
     const first = reviewFirstLoad; reviewFirstLoad = false;
-    const inScope = c => (followScope === 'main' || followScope === 'all') ? scopeCities.includes(c) : c === followScope;
+    const pickedCities = [...followSel].filter(k => BRANCH_CITIES[k]);
+    const inScope = c => scopeCities.includes(c) && (!pickedCities.length || pickedCities.includes(c));
     const list = BRANCHES.filter(b => b.review && inScope(b.city)), soon = UPCOMING.filter(u => inScope(u.city));
     select.innerHTML = ''; $('manual').style.display = 'none'; $('soon').style.display = 'none';
     if (!list.length) {
@@ -672,7 +680,7 @@
   buildDropdown();
   $('btn-review').addEventListener('click', doReview);
   function applyFollowScope() { renderSocial(); renderReviewBranches(); ddRefresh(); restoreDone(); }
-  makeChips('follow-chips', [{ id: 'all', label: 'All' }, { id: 'main', label: 'Main' }, ...scopeCities.map(k => ({ id: k, label: BRANCH_CITIES[k] }))], followScope, v => { followScope = v; applyFollowScope(); });
+  makeChips('follow-chips', [{ id: 'all', label: 'All' }, { id: 'main', label: 'Main' }, ...scopeCities.map(k => ({ id: k, label: BRANCH_CITIES[k] }))], followSel, applyFollowScope);
   applyFollowScope();
   $('manual-go').addEventListener('click', () => openMaps(pendingUrl || (BRANCHES.find(b => b.id === $('branch-select').value) || {}).review));
   $('reset-btn').addEventListener('click', () => { doneState = {}; saveDone(doneState); $('manual').style.display = 'none'; restoreDone(); showToast('Progress has been reset'); });
