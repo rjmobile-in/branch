@@ -62,11 +62,6 @@
     .search { width: 100%; margin: 14px 0 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 16px; }
     .search::placeholder { color: var(--soft); }
 
-    .cities { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
-    .city-chip { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--soft); font-weight: 700; font-size: 14px; cursor: pointer; transition: transform .15s, border-color .2s, background-color .25s, color .25s; }
-    .city-chip em { font-style: normal; font-size: 12px; opacity: .8; }
-    .city-chip:hover { border-color: var(--gold); } .city-chip:active { transform: scale(.95); }
-    .city-chip[aria-pressed='true'] { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
     .list { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; list-style: none; }
     .list li + li { border-top: 1px solid var(--line); }
     .branch { padding: 18px 20px; }
@@ -159,6 +154,15 @@
     .icon-btn .sun, .icon-btn .moon { animation: iconIn .5s cubic-bezier(.34, 1.56, .64, 1); }
     .branch.nearest.flash { animation: flash 1.6s ease-out .5s both; }
 
+    /* ---- City chips (Branches + Review and follow) ---- */
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { position: relative; overflow: hidden; flex: 0 0 auto; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--chip); color: var(--soft); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: background-color .25s, color .25s, border-color .2s, transform .15s; }
+    .chip:hover { border-color: var(--gold); }
+    .chip:active { transform: scale(.95); }
+    .chip[aria-pressed="true"] { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+    .action-btn[hidden] { display: none !important; }
+
     /* ---- Custom branch dropdown ---- */
     .dd { position: relative; }
     .dd select { display: none; }
@@ -190,7 +194,7 @@
     </button>
   </div>
 
-  <h1 id="h1">Your nearest RJ Mobile, one tap away</h1>
+  <h1>Your nearest RJ Mobile, one tap away</h1>
   <p class="lead">Find a branch, call or WhatsApp us, and follow our pages for offers.</p>
 
   <div class="tabs" id="tabs" data-active="branches" role="tablist">
@@ -204,7 +208,7 @@
       <span id="locate-text">Find my nearest branch</span>
     </button>
     <p id="status" class="status" role="status" aria-live="polite"></p>
-    <div id="cities" class="cities" role="group" aria-label="Filter by city"></div>
+    <div class="chips" id="branch-chips" role="group" aria-label="Filter branches by city"></div>
     <input id="search" class="search" type="search" placeholder="Search by area, for example Murlipura" aria-label="Search branches" autocomplete="off" />
     <ul id="list" class="list"></ul>
     <p id="empty" class="empty"></p>
@@ -213,6 +217,7 @@
   <section id="panel-connect" role="tabpanel" aria-labelledby="tab-connect" hidden>
     <div class="card">
       <div class="progress"><span id="prog-text">0/0 done</span><div class="bar"><i id="prog-bar"></i></div></div>
+      <div class="chips" id="follow-chips" role="group" aria-label="Choose city or main page"></div>
       <div class="dd" id="dd">
         <select id="branch-select" aria-label="Select branch"></select>
         <button type="button" class="dd-btn" id="dd-btn" aria-haspopup="listbox" aria-expanded="false">
@@ -261,8 +266,8 @@
     { id: 'lohamandi', city: 'jaipur', name: 'Loha Mandi', addr: 'Shop No. A-6, Krishna Market, New Loha Mandi Road, Harmada, Jaipur', lat: 26.995372, lng: 75.766264, maps: 'https://maps.app.goo.gl/qdBwqJGh7jVdHELk9', review: 'https://search.google.com/local/writereview?placeid=ChIJ7wWKoB-zbTkRuoxnfdku9EQ', alias: ['vkilohamandi'] },
     { id: 'vki6', city: 'jaipur', name: 'VKI, Road No. 6', addr: 'Opposite CKS Hospital, Road No. 6, VKI, Jaipur', lat: 26.982277, lng: 75.771452, maps: 'https://maps.app.goo.gl/1hKXksoent3QnRTz9', review: 'https://g.page/r/CZbxO8pvx8u8EBM/review', alias: [] },
     { id: 'vki17', city: 'jaipur', name: 'VKI, Road No. 17', addr: 'Bhrigu Marg, Road No. 17, Vishwakarma Industrial Area, Jaipur', lat: 27.001164, lng: 75.794941, maps: 'https://maps.app.goo.gl/VCL5GzwvVGYJqTvq5', review: 'https://g.page/r/CQOTwy2wHbcVEBM/review', alias: [] },
-    // TODO: add lat/lng and the street address for Sadulpur when available
-    { id: 'Sadulpur', city: 'rajgarh', name: 'Sadulpur', addr: 'Sadulpur, Rajgarh', maps: 'https://maps.app.goo.gl/vjGvBH382TWX2oBU8', review: 'https://g.page/r/CVu708z0OM1PEBM/review', alias: ['rajgarh'] }
+    // TODO: lat/lng for Sadulpur are approximate - replace with exact coordinates from the Google Maps pin
+    { id: 'Sadulpur', city: 'rajgarh', name: 'Sadulpur', addr: 'Sadulpur, Rajgarh', lat: 28.6990, lng: 75.3820, maps: 'https://maps.app.goo.gl/vjGvBH382TWX2oBU8', review: 'https://g.page/r/CVu708z0OM1PEBM/review', alias: ['rajgarh'] }
   ];
   const UPCOMING = [ { city: 'jaipur', name: 'Raja Park' }, { city: 'churu', name: 'Churu' } ];
 
@@ -274,11 +279,16 @@
   const cityList = (params.get('city') || '').toLowerCase().split(/[,\s|]+/).filter(Boolean);
   const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const $ = id => document.getElementById(id);
-  /* City scope: ?city=jaipur shows only Jaipur (no chips); no param or several cities show chips to switch */
-  const scopeCities = (() => { const c = cityList.filter(k => BRANCH_CITIES[k]); return c.length ? c : Object.keys(BRANCH_CITIES); })();
-  let activeCity = scopeCities.length === 1 ? scopeCities[0] : '';
-  const cityOK = c => activeCity ? c === activeCity : scopeCities.includes(c);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* City chips: renders a row of single-select chips, returns a function that highlights one */
+  function makeChips(id, opts, active, onPick) {
+    const el = $(id);
+    el.innerHTML = opts.map(o => `<button type="button" class="chip" data-v="${esc(o.id)}" aria-pressed="${o.id === active}">${esc(o.label)}</button>`).join('');
+    const paint = v => el.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+    el.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { paint(b.dataset.v); onPick(b.dataset.v); }));
+    return paint;
+  }
 
   /* ============ TOAST ============ */
   let toastTimer;
@@ -314,7 +324,7 @@
 
   /* ---- Click ripple on every button ---- */
   document.addEventListener('pointerdown', e => {
-    const el = e.target.closest('.primary, .pill, .action-btn, .tab, .icon-btn, .link-btn');
+    const el = e.target.closest('.primary, .pill, .chip, .action-btn, .tab, .icon-btn, .link-btn');
     if (!el || el.disabled || reduceMotion()) return;
     const r = el.getBoundingClientRect(), size = Math.max(r.width, r.height) * 2.2;
     const x = e.clientX ? e.clientX - r.left : r.width / 2, y = e.clientY ? e.clientY - r.top : r.height / 2;
@@ -346,6 +356,8 @@
   let distances = null;   // { branchId: meters }
   let animateNext = true; // entrance animation on first load only
   let flashNext = false;  // highlight the nearest branch right after locating
+  let branchCity = 'all'; // city chip above the search bar
+  let paintBranchChips = () => {};
 
   function istMinutes() {
     const p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(new Date());
@@ -364,9 +376,10 @@
     // Remember where each row is now, so rows can glide to their new place after re-sorting or filtering
     const prevTop = new Map();
     $('list').querySelectorAll('li[data-id]').forEach(li => prevTop.set(li.dataset.id, li.getBoundingClientRect().top));
+    const cityOK = c => branchCity === 'all' || c === branchCity;
     let items = BRANCHES.filter(b => cityOK(b.city)).map(b => ({ b, d: distances && distances[b.id] != null ? distances[b.id] : null }));
     if (distances) items.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
-    const nearestId = distances && items.length && items[0].d != null ? items[0].b.id : null;
+    const nearestId = distances && items[0].d != null ? items[0].b.id : null;
     const match = s => !q || s.toLowerCase().includes(q);
 
     let html = items.filter(({ b }) => match(b.name + ' ' + b.addr)).map(({ b, d }, i) => {
@@ -400,21 +413,10 @@
       });
     }
     $('empty').style.display = html ? 'none' : 'block';
-    if (!html) $('empty').textContent = 'No branch matches "' + $('search').value.trim() + '". Try an area name such as Jhotwara or VKI.';
+    if (!html) $('empty').textContent = q ? 'No branch matches "' + $('search').value.trim() + '". Try an area name such as Jhotwara or VKI.' : 'No branches here yet.';
   }
   $('search').addEventListener('input', renderBranches);
-
-  function renderCities() {
-    const box = $('cities');
-    if (scopeCities.length < 2) { box.style.display = 'none'; return; }
-    const n = k => BRANCHES.filter(b => b.city === k).length;
-    const chip = (k, label, count) => `<button type="button" class="city-chip" data-city="${k}" aria-pressed="${activeCity === k}">${esc(label)}<em>${count}</em></button>`;
-    box.innerHTML = chip('', 'All', BRANCHES.filter(b => scopeCities.includes(b.city)).length) + scopeCities.map(k => chip(k, BRANCH_CITIES[k], n(k) || 'Soon')).join('');
-  }
-  $('cities').addEventListener('click', e => {
-    const b = e.target.closest('.city-chip'); if (!b) return;
-    activeCity = b.dataset.city; renderCities(); renderBranches();
-  });
+  paintBranchChips = makeChips('branch-chips', [{ id: 'all', label: 'All' }, ...Object.keys(BRANCH_CITIES).map(k => ({ id: k, label: BRANCH_CITIES[k] }))], branchCity, v => { branchCity = v; renderBranches(); });
 
   function setStatus(msg, err) { $('status').textContent = msg; $('status').classList.toggle('error', !!err); }
   function straightLine(lat1, lon1, lat2, lon2) {
@@ -441,7 +443,7 @@
       let arr, byRoad = true;
       try { arr = await roadDistances(lat, lng); } catch (e) { byRoad = false; arr = geoBranches.map(b => straightLine(lat, lng, b.lat, b.lng)); }
       distances = {}; geoBranches.forEach((b, i) => { distances[b.id] = arr[i]; });
-      $('search').value = ''; flashNext = true; renderBranches();
+      $('search').value = ''; branchCity = 'all'; paintBranchChips('all'); flashNext = true; renderBranches();
       btn.disabled = false; btn.classList.remove('loading'); label.textContent = 'Update my location';
       setStatus(byRoad ? 'Sorted by driving distance from you.' : 'Sorted by straight-line distance from you.');
     }, err => {
@@ -460,7 +462,12 @@
   ]; // Churu / Rajgarh handles are assumed - change if different
   const YT_URL = 'https://www.youtube.com/@rjmobileindia/shorts';
   const WA_URL = 'https://whatsapp.com/channel/0029VbCYXVB545v1l2Bme81S';
-  const accounts = [MAIN, ...(cityList.includes('all') ? CITIES : CITIES.filter(c => cityList.includes(c.id)))];
+  /* Scope chip for "Review and follow": all | main | a city. URL params only pick the starting chip / limit which cities are offered. */
+  const urlCities = cityList.filter(c => BRANCH_CITIES[c]);
+  const scopeCities = urlCities.length ? urlCities : Object.keys(BRANCH_CITIES);
+  const bpn0 = norm(params.get('branch'));
+  let followScope = cityList.includes('all') || urlCities.length > 1 ? 'all' : urlCities.length === 1 ? urlCities[0] : (BRANCH_CITIES[bpn0] ? bpn0 : 'main');
+  const accountsFor = s => s === 'main' ? [MAIN] : s === 'all' ? [MAIN, ...CITIES.filter(c => scopeCities.includes(c.id))] : CITIES.filter(c => c.id === s);
   const ICONS = {
     ig: '<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>',
     yt: '<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>',
@@ -476,6 +483,7 @@
       <div class="btn-text"><span class="btn-title">${esc(title)}</span><span class="btn-sub">${esc(sub)}</span></div></div><span class="status-icon">➔</span></a>`;
   }
   function renderSocial() {
+    const accounts = accountsFor(followScope);
     let h = '';
     accounts.forEach(a => { const w = `https://www.instagram.com/${a.ig}/`; h += socialBtn('ig:' + a.id, ICONS.ig, 'icon-ig', w, androidIntent('instagram.com/_u/' + a.ig, 'com.instagram.android', w), `Instagram: ${a.name}`, `@${a.ig}, follow, like and add to story`); });
     accounts.forEach(a => { const w = `https://www.facebook.com/${a.fb}/`; h += socialBtn('fb:' + a.id, ICONS.fb, 'icon-fb', w, androidIntent('www.facebook.com/' + a.fb, 'com.facebook.katana', w), `Facebook: ${a.name}`, 'Follow and like'); });
@@ -491,7 +499,7 @@
   const loadDone = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } };
   const saveDone = o => { try { localStorage.setItem(STORE_KEY, JSON.stringify(o)); } catch (e) {} };
   let doneState = loadDone();
-  const allButtons = () => document.querySelectorAll('#panel-connect .action-btn[data-key]');
+  const allButtons = () => document.querySelectorAll('#panel-connect .action-btn[data-key]:not([hidden])');
   function paintDone(el, on) {
     el.classList.toggle('done', on);
     el.querySelector('.btn-title').textContent = (on ? '✓ ' : '') + el.dataset.title;
@@ -564,18 +572,20 @@
   }
 
   /* ============ REVIEW BRANCH PICKER ============ */
+  let reviewFirstLoad = true;
   function renderReviewBranches() {
     const select = $('branch-select'), bpn = norm(params.get('branch'));
-    let cities = cityList.filter(c => BRANCH_CITIES[c]);
-    if (!cities.length && BRANCH_CITIES[bpn]) cities = [bpn];
-    const inScope = c => !cities.length || cities.includes(c);
+    const first = reviewFirstLoad; reviewFirstLoad = false;
+    const inScope = c => (followScope === 'main' || followScope === 'all') ? scopeCities.includes(c) : c === followScope;
     const list = BRANCHES.filter(b => b.review && inScope(b.city)), soon = UPCOMING.filter(u => inScope(u.city));
+    select.innerHTML = ''; $('manual').style.display = 'none'; $('soon').style.display = 'none';
     if (!list.length) {
-      select.style.display = 'none'; $('btn-review').remove();
+      $('btn-review').hidden = true;
       $('soon').innerHTML = '<strong>' + (soon.length ? soon.map(u => u.name).join(', ') + ' branch coming soon' : 'Branches coming soon') + '</strong><span>Reviews will open here once the branch is live. You can follow us on social media meanwhile.</span>';
       $('soon').style.display = 'block';
       return false;
     }
+    $('btn-review').hidden = false;
     const opt = (text, id, disabled) => { const o = document.createElement('option'); o.textContent = '📍 ' + text; if (id) o.value = id; o.disabled = !!disabled; return o; };
     const keys = Object.keys(BRANCH_CITIES).filter(k => list.some(b => b.city === k) || soon.some(u => u.city === k));
     keys.forEach(k => {
@@ -584,12 +594,11 @@
       soon.filter(u => u.city === k).forEach(u => parent.appendChild(opt(u.name + ' (Coming soon)', '', true)));
       if (parent !== select) select.appendChild(parent);
     });
-    if (bpn && !BRANCH_CITIES[bpn]) {
+    if (first && bpn && !BRANCH_CITIES[bpn]) {
       const hit = list.find(b => norm(b.id) === bpn || b.alias.some(a => norm(a) === bpn) || norm(b.name) === bpn) || (bpn.length >= 3 ? list.find(b => norm(b.name).includes(bpn)) : null);
       if (hit) select.value = hit.id;
     }
     if (select.selectedIndex < 0 || select.options[select.selectedIndex].disabled) select.selectedIndex = Array.from(select.options).findIndex(o => !o.disabled);
-    if (list.length === 1 && !soon.length) select.style.display = 'none';
     return true;
   }
 
@@ -622,12 +631,12 @@
   }
 
   /* ============ CUSTOM BRANCH DROPDOWN ============ */
+  let ddRefresh = () => {};
   function buildDropdown() {
     const sel = $('branch-select'), dd = $('dd'), btn = $('dd-btn'), menu = $('dd-menu');
-    if (sel.options.length < 2) { dd.style.display = 'none'; return; }
     const clean = t => t.replace('📍 ', '');
     const sync = () => {
-      $('dd-label').textContent = clean(sel.options[sel.selectedIndex].textContent);
+      $('dd-label').textContent = sel.selectedIndex >= 0 ? clean(sel.options[sel.selectedIndex].textContent) : '';
       menu.querySelectorAll('.dd-opt').forEach(li => li.setAttribute('aria-selected', li.dataset.v === sel.value && !li.classList.contains('disabled')));
     };
     const close = () => { dd.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); };
@@ -639,28 +648,32 @@
       if (!o.disabled) li.addEventListener('click', () => { sel.value = o.value; sel.dispatchEvent(new Event('change')); sync(); close(); });
       menu.appendChild(li);
     };
-    Array.from(sel.children).forEach(ch => {
-      if (ch.tagName === 'OPTGROUP') {
-        const g = document.createElement('li'); g.className = 'dd-group'; g.textContent = ch.label; menu.appendChild(g);
-        Array.from(ch.children).forEach(addOpt);
-      } else addOpt(ch);
-    });
+    // Rebuild the menu from the <select> (called whenever the city chip changes)
+    ddRefresh = () => {
+      menu.innerHTML = '';
+      Array.from(sel.children).forEach(ch => {
+        if (ch.tagName === 'OPTGROUP') {
+          const g = document.createElement('li'); g.className = 'dd-group'; g.textContent = ch.label; menu.appendChild(g);
+          Array.from(ch.children).forEach(addOpt);
+        } else addOpt(ch);
+      });
+      dd.style.display = sel.options.length < 2 ? 'none' : '';
+      close(); sync();
+    };
     btn.addEventListener('click', () => { const o = dd.classList.toggle('open'); btn.setAttribute('aria-expanded', o); });
     document.addEventListener('click', e => { if (!dd.contains(e.target)) close(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-    sync();
   }
 
   /* ============ INIT ============ */
-  const scopedB = BRANCHES.filter(b => scopeCities.includes(b.city)), scopedU = UPCOMING.filter(u => scopeCities.includes(u.city));
-  const footer = scopedB.length + ' branches' + (scopedU.length ? ', ' + scopedU.length + ' more coming soon' : '');
-  if (scopeCities.length === 1) $('h1').textContent = 'Your nearest RJ Mobile in ' + BRANCH_CITIES[scopeCities[0]];
-  renderCities();
+  const footer = BRANCHES.length + ' branches' + (UPCOMING.length ? ', ' + UPCOMING.length + ' more coming soon' : '');
   $('footer').textContent = footer;
   renderBranches();
-  renderSocial();
-  if (renderReviewBranches()) { buildDropdown(); $('btn-review').addEventListener('click', doReview); }
-  else $('dd').style.display = 'none';
+  buildDropdown();
+  $('btn-review').addEventListener('click', doReview);
+  function applyFollowScope() { renderSocial(); renderReviewBranches(); ddRefresh(); restoreDone(); }
+  makeChips('follow-chips', [{ id: 'all', label: 'All' }, { id: 'main', label: 'Main' }, ...scopeCities.map(k => ({ id: k, label: BRANCH_CITIES[k] }))], followScope, v => { followScope = v; applyFollowScope(); });
+  applyFollowScope();
   $('manual-go').addEventListener('click', () => openMaps(pendingUrl || (BRANCHES.find(b => b.id === $('branch-select').value) || {}).review));
   $('reset-btn').addEventListener('click', () => { doneState = {}; saveDone(doneState); $('manual').style.display = 'none'; restoreDone(); showToast('Progress has been reset'); });
   restoreDone();
