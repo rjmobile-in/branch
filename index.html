@@ -250,8 +250,8 @@
 
 <script>
   /* ============ SETTINGS ============ */
-  const PHONE = '+919093469093';            // tap-to-call
-  const WA_NUMBER = '919093469093';         // WhatsApp (country code + number, no +)
+  const PHONE = '+919093469093';            // default number (call + WhatsApp) for branches without their own `phone`
+  const phoneOf = b => b.phone ? '+91' + b.phone : PHONE;   // branch number (10 digits in BRANCHES) or the default
   const OPEN_MIN = 10 * 60, CLOSE_MIN = 22 * 60;   // 10:00 to 22:00 IST
   const DCM_REVIEW_URL = '';                // paste the DCM review link here to enable DCM in the review list
   const BRANCH_CITIES = { jaipur: 'Jaipur', rajgarh: 'Rajgarh', churu: 'Churu' };
@@ -260,12 +260,13 @@
      lat/lng are optional: a branch without them is listed but has no distance yet. */
   const BRANCHES = [
     { id: 'dcm', city: 'jaipur', name: 'DCM', addr: 'Near OM Sweets, Ajmer Road, DCM, Jaipur', lat: 26.894441, lng: 75.747676, maps: 'https://maps.app.goo.gl/eks8UkDuuhFSaghs8', review: DCM_REVIEW_URL, alias: [] },
-    { id: 'jhotwara', city: 'jaipur', name: 'Jhotwara', addr: 'Kanta Chauraha, Kalwar Road, Jhotwara, Jaipur', lat: 26.94423, lng: 75.743943, maps: 'https://maps.app.goo.gl/tWS59yvhJJwrLT7K7', review: 'https://g.page/r/CRDRHW_oEFkqEBM/review', alias: [] },
-    { id: 'murlipura', city: 'jaipur', name: 'Murlipura, Road No. 1', addr: 'Shop No. 12, Kedia Palace Road, Murlipura, Jaipur', lat: 26.970981, lng: 75.770674, maps: 'https://maps.app.goo.gl/fbznL2wGQ7F3tvUp9', review: 'https://g.page/r/CXJpKGVjH1_xEBM/review', alias: ['murlipura1'] },
-    { id: 'shastrinagar', city: 'jaipur', name: 'Shastri Nagar', addr: 'In front of BOB bank, Vidhyadhar Nagar Marg, Shastri Nagar, Jaipur', lat: 26.948108, lng: 75.796868, maps: 'https://maps.app.goo.gl/MhjdV4T5RtG7V2cPA', review: 'https://g.page/r/CTZC43cDH7SuEBM/review', alias: [] },
-    { id: 'lohamandi', city: 'jaipur', name: 'Loha Mandi', addr: 'Shop No. A-6, Krishna Market, New Loha Mandi Road, Harmada, Jaipur', lat: 26.995372, lng: 75.766264, maps: 'https://maps.app.goo.gl/qdBwqJGh7jVdHELk9', review: 'https://search.google.com/local/writereview?placeid=ChIJ7wWKoB-zbTkRuoxnfdku9EQ', alias: ['vkilohamandi'] },
-    { id: 'vki6', city: 'jaipur', name: 'VKI, Road No. 6', addr: 'Opposite CKS Hospital, Road No. 6, VKI, Jaipur', lat: 26.982277, lng: 75.771452, maps: 'https://maps.app.goo.gl/1hKXksoent3QnRTz9', review: 'https://g.page/r/CZbxO8pvx8u8EBM/review', alias: [] },
+    { id: 'jhotwara', phone: '7851949093', city: 'jaipur', name: 'Jhotwara', addr: 'Kanta Chauraha, Kalwar Road, Jhotwara, Jaipur', lat: 26.94423, lng: 75.743943, maps: 'https://maps.app.goo.gl/tWS59yvhJJwrLT7K7', review: 'https://g.page/r/CRDRHW_oEFkqEBM/review', alias: [] },
+    { id: 'murlipura', phone: '9251169093', city: 'jaipur', name: 'Murlipura, Road No. 1', addr: 'Shop No. 12, Kedia Palace Road, Murlipura, Jaipur', lat: 26.970981, lng: 75.770674, maps: 'https://maps.app.goo.gl/fbznL2wGQ7F3tvUp9', review: 'https://g.page/r/CXJpKGVjH1_xEBM/review', alias: ['murlipura1'] },
+    { id: 'shastrinagar', phone: '9251269093', city: 'jaipur', name: 'Shastri Nagar', addr: 'In front of BOB bank, Vidhyadhar Nagar Marg, Shastri Nagar, Jaipur', lat: 26.948108, lng: 75.796868, maps: 'https://maps.app.goo.gl/MhjdV4T5RtG7V2cPA', review: 'https://g.page/r/CTZC43cDH7SuEBM/review', alias: [] },
+    { id: 'lohamandi', phone: '8529745027', city: 'jaipur', name: 'Loha Mandi', addr: 'Shop No. A-6, Krishna Market, New Loha Mandi Road, Harmada, Jaipur', lat: 26.995372, lng: 75.766264, maps: 'https://maps.app.goo.gl/qdBwqJGh7jVdHELk9', review: 'https://search.google.com/local/writereview?placeid=ChIJ7wWKoB-zbTkRuoxnfdku9EQ', alias: ['vkilohamandi'] },
+    { id: 'vki6', phone: '8302793304', city: 'jaipur', name: 'VKI, Road No. 6', addr: 'Opposite CKS Hospital, Road No. 6, VKI, Jaipur', lat: 26.982277, lng: 75.771452, maps: 'https://maps.app.goo.gl/1hKXksoent3QnRTz9', review: 'https://g.page/r/CZbxO8pvx8u8EBM/review', alias: [] },
     { id: 'vki17', city: 'jaipur', name: 'VKI, Road No. 17', addr: 'Bhrigu Marg, Road No. 17, Vishwakarma Industrial Area, Jaipur', lat: 27.001164, lng: 75.794941, maps: 'https://maps.app.goo.gl/VCL5GzwvVGYJqTvq5', review: 'https://g.page/r/CQOTwy2wHbcVEBM/review', alias: [] },
+    // Branch `phone` is optional (10 digits, used for Call + WhatsApp); none = default PHONE above.
     // Raja Park: not open yet (soon: true) but fully functional. TODO: add lat/lng for distance; remove soon: true when it opens
     { id: 'rajapark', city: 'jaipur', name: 'Raja Park', addr: 'Ram Gali Number 1, Panchwati Cir, Jaipur', soon: true, maps: 'https://maps.app.goo.gl/cAZBKAN9P61hs9rf6', review: 'https://g.page/r/Cc7AlQxnzMEZEBM/review', alias: ['raja park'] },
     // TODO: lat/lng for Sadulpur are approximate - replace with exact coordinates from the Google Maps pin
@@ -392,7 +393,7 @@
     const match = s => !q || s.toLowerCase().includes(q);
 
     let html = items.filter(({ b }) => match(b.name + ' ' + b.addr)).map(({ b, d }, i) => {
-      const wa = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent('Hi RJ Mobile ' + b.name + ', ');
+      const wa = 'https://wa.me/' + phoneOf(b).replace(/\D/g, '') + '?text=' + encodeURIComponent('Hi RJ Mobile ' + b.name + ', ');
       return `<li class="branch ${b.id === nearestId ? 'nearest' : ''} ${flash && b.id === nearestId ? 'flash' : ''} ${anim ? 'enter' : ''}" data-id="${b.id}" style="--i:${i}">
         <div class="b-head">
           <div>${b.id === nearestId ? '<span class="tag">Nearest to you</span>' : ''}${b.soon ? '<span class="tag">Coming soon</span>' : ''}<div class="name">${esc(b.name)}</div><div class="addr">${esc(b.addr)}</div></div>
@@ -401,7 +402,7 @@
         <span class="hours ${h.open && !b.soon ? 'open' : ''}">${b.soon ? 'Opening soon' : h.text}</span>
         <div class="actions">
           <a class="pill main stroke" href="${b.maps}" target="_blank" rel="noopener">${ICON_PIN} Directions</a>
-          <a class="pill stroke" href="tel:${PHONE}">${ICON_CALL} Call</a>
+          <a class="pill stroke" href="tel:${phoneOf(b)}">${ICON_CALL} Call</a>
           <a class="pill" href="${wa}" target="_blank" rel="noopener">${ICON_WA} WhatsApp</a>
         </div></li>`;
     }).join('');
