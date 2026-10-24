@@ -266,10 +266,12 @@
     { id: 'lohamandi', city: 'jaipur', name: 'Loha Mandi', addr: 'Shop No. A-6, Krishna Market, New Loha Mandi Road, Harmada, Jaipur', lat: 26.995372, lng: 75.766264, maps: 'https://maps.app.goo.gl/qdBwqJGh7jVdHELk9', review: 'https://search.google.com/local/writereview?placeid=ChIJ7wWKoB-zbTkRuoxnfdku9EQ', alias: ['vkilohamandi'] },
     { id: 'vki6', city: 'jaipur', name: 'VKI, Road No. 6', addr: 'Opposite CKS Hospital, Road No. 6, VKI, Jaipur', lat: 26.982277, lng: 75.771452, maps: 'https://maps.app.goo.gl/1hKXksoent3QnRTz9', review: 'https://g.page/r/CZbxO8pvx8u8EBM/review', alias: [] },
     { id: 'vki17', city: 'jaipur', name: 'VKI, Road No. 17', addr: 'Bhrigu Marg, Road No. 17, Vishwakarma Industrial Area, Jaipur', lat: 27.001164, lng: 75.794941, maps: 'https://maps.app.goo.gl/VCL5GzwvVGYJqTvq5', review: 'https://g.page/r/CQOTwy2wHbcVEBM/review', alias: [] },
+    // Raja Park: not open yet (soon: true) but fully functional. TODO: add lat/lng for distance; remove soon: true when it opens
+    { id: 'rajapark', city: 'jaipur', name: 'Raja Park', addr: 'Ram Gali Number 1, Panchwati Cir, Jaipur', soon: true, maps: 'https://maps.app.goo.gl/cAZBKAN9P61hs9rf6', review: 'https://g.page/r/Cc7AlQxnzMEZEBM/review', alias: ['raja park'] },
     // TODO: lat/lng for Sadulpur are approximate - replace with exact coordinates from the Google Maps pin
     { id: 'Sadulpur', city: 'rajgarh', name: 'Sadulpur', addr: 'Sadulpur, Rajgarh', lat: 28.6990, lng: 75.3820, maps: 'https://maps.app.goo.gl/vjGvBH382TWX2oBU8', review: 'https://g.page/r/CVu708z0OM1PEBM/review', alias: ['rajgarh'] }
   ];
-  const UPCOMING = [ { city: 'jaipur', name: 'Raja Park' }, { city: 'churu', name: 'Churu' } ];
+  const UPCOMING = [ { city: 'churu', name: 'Churu' } ];
 
   /* ============ URL PARAMS ============
      ?city=all | jaipur | jaipur,churu  -> which social accounts and which review branches show
@@ -393,10 +395,10 @@
       const wa = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent('Hi RJ Mobile ' + b.name + ', ');
       return `<li class="branch ${b.id === nearestId ? 'nearest' : ''} ${flash && b.id === nearestId ? 'flash' : ''} ${anim ? 'enter' : ''}" data-id="${b.id}" style="--i:${i}">
         <div class="b-head">
-          <div>${b.id === nearestId ? '<span class="tag">Nearest to you</span>' : ''}<div class="name">${esc(b.name)}</div><div class="addr">${esc(b.addr)}</div></div>
+          <div>${b.id === nearestId ? '<span class="tag">Nearest to you</span>' : ''}${b.soon ? '<span class="tag">Coming soon</span>' : ''}<div class="name">${esc(b.name)}</div><div class="addr">${esc(b.addr)}</div></div>
           ${d != null ? `<span class="dist">${fmtDist(d)}</span>` : ''}
         </div>
-        <span class="hours ${h.open ? 'open' : ''}">${h.text}</span>
+        <span class="hours ${h.open && !b.soon ? 'open' : ''}">${b.soon ? 'Opening soon' : h.text}</span>
         <div class="actions">
           <a class="pill main stroke" href="${b.maps}" target="_blank" rel="noopener">${ICON_PIN} Directions</a>
           <a class="pill stroke" href="tel:${PHONE}">${ICON_CALL} Call</a>
@@ -598,7 +600,7 @@
     const keys = Object.keys(BRANCH_CITIES).filter(k => list.some(b => b.city === k) || soon.some(u => u.city === k));
     keys.forEach(k => {
       const parent = keys.length > 1 ? Object.assign(document.createElement('optgroup'), { label: BRANCH_CITIES[k] }) : select;
-      list.filter(b => b.city === k).forEach(b => parent.appendChild(opt(b.name, b.id)));
+      list.filter(b => b.city === k).forEach(b => parent.appendChild(opt(b.name + (b.soon ? ' (Coming soon)' : ''), b.id)));
       soon.filter(u => u.city === k).forEach(u => parent.appendChild(opt(u.name + ' (Coming soon)', '', true)));
       if (parent !== select) select.appendChild(parent);
     });
@@ -674,7 +676,8 @@
   }
 
   /* ============ INIT ============ */
-  const footer = BRANCHES.length + ' branches' + (UPCOMING.length ? ', ' + UPCOMING.length + ' more coming soon' : '');
+  const liveCount = BRANCHES.filter(b => !b.soon).length, soonCount = BRANCHES.length - liveCount + UPCOMING.length;
+  const footer = liveCount + ' branches' + (soonCount ? ', ' + soonCount + ' more coming soon' : '');
   $('footer').textContent = footer;
   renderBranches();
   buildDropdown();
