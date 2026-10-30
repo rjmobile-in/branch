@@ -275,7 +275,7 @@
   const UPCOMING = [ { city: 'churu', name: 'Churu' } ];
 
   /* ============ URL PARAMS ============
-     ?city=all | jaipur | jaipur,churu  -> only these cities show, in BOTH tabs (branch list + social/review). all or empty = every city
+     ?city=all | jaipur | jaipur,churu  -> those cities come pre-selected in BOTH tabs (chips). Nothing is hidden or locked, the visitor can still change it. all or empty = All
      ?review=vki6  (or ?branch=vki6)    -> that branch is preselected in the review dropdown
      ?social=true                       -> opens "Review and follow" first
      ?social=false, or no social param  -> always opens "Branches" first (city / review / branch never switch the tab) */
@@ -283,7 +283,7 @@
   const cityList = (params.get('city') || '').toLowerCase().split(/[,\s|]+/).filter(Boolean);
   const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const urlCities = cityList.includes('all') ? [] : cityList.filter(c => BRANCH_CITIES[c]);
-  const scopeCities = urlCities.length ? urlCities : Object.keys(BRANCH_CITIES);   // cities allowed on this page
+  const scopeCities = Object.keys(BRANCH_CITIES);   // every city stays available; ?city only pre-selects
   const reviewParam = norm(params.get('review') || params.get('branch'));           // branch to preselect for review
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -376,7 +376,7 @@
   let distances = null;   // { branchId: meters }
   let animateNext = true; // entrance animation on first load only
   let flashNext = false;  // highlight the nearest branch right after locating
-  const branchSel = new Set(); // cities picked in the chips above the search bar (empty = All)
+  const branchSel = new Set(urlCities.length === Object.keys(BRANCH_CITIES).length ? [] : urlCities); // cities picked in the chips above the search bar (empty = All); pre-filled from ?city
   let paintBranchChips = () => {};
 
   function istMinutes() {
@@ -437,7 +437,6 @@
   }
   $('search').addEventListener('input', renderBranches);
   paintBranchChips = makeChips('branch-chips', [{ id: 'all', label: 'All' }, ...scopeCities.map(k => ({ id: k, label: BRANCH_CITIES[k] }))], branchSel, renderBranches);
-  if (scopeCities.length < 2) $('branch-chips').style.display = 'none';   // a single city needs no filter chips
 
   function setStatus(msg, err) { $('status').textContent = msg; $('status').classList.toggle('error', !!err); }
   function straightLine(lat1, lon1, lat2, lon2) {
@@ -486,6 +485,9 @@
   /* Scope chip for "Review and follow": all | main | a city. URL params only pick the starting chip / limit which cities are offered. */
   const bpn0 = reviewParam;
   const followSel = new Set(cityList.includes('all') ? [] : urlCities.length ? urlCities : (BRANCH_CITIES[bpn0] ? [bpn0] : ['main']));   // empty = All
+  // If ?review points at a branch whose city chip is not selected, select that city too so the branch can be pre-selected
+  const reviewHit = bpn0 && !BRANCH_CITIES[bpn0] ? BRANCHES.find(b => b.review && (norm(b.id) === bpn0 || b.alias.some(a => norm(a) === bpn0) || norm(b.name) === bpn0)) : null;
+  if (reviewHit && followSel.size && !followSel.has(reviewHit.city)) followSel.delete('main'), followSel.add(reviewHit.city);
   const accountsFor = () => { const all = !followSel.size; return [...(all || followSel.has('main') ? [MAIN] : []), ...CITIES.filter(c => scopeCities.includes(c.id) && (all || followSel.has(c.id)))]; };
   const ICONS = {
     ig: '<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>',
