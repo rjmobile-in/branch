@@ -275,12 +275,16 @@
   const UPCOMING = [ { city: 'churu', name: 'Churu' } ];
 
   /* ============ URL PARAMS ============
-     ?city=all | jaipur | jaipur,churu  -> which social accounts and which review branches show
-     ?branch=vki6                        -> preselect the review branch
-     Any ?city / ?branch / #connect opens the "Review and follow" tab first. */
+     ?city=all | jaipur | jaipur,churu  -> only these cities show, in BOTH tabs (branch list + social/review). all or empty = every city
+     ?review=vki6  (or ?branch=vki6)    -> that branch is preselected in the review dropdown
+     ?social=true                       -> opens "Review and follow" first
+     ?social=false, or no social param  -> always opens "Branches" first (city / review / branch never switch the tab) */
   const params = new URLSearchParams(location.search);
   const cityList = (params.get('city') || '').toLowerCase().split(/[,\s|]+/).filter(Boolean);
   const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const urlCities = cityList.includes('all') ? [] : cityList.filter(c => BRANCH_CITIES[c]);
+  const scopeCities = urlCities.length ? urlCities : Object.keys(BRANCH_CITIES);   // cities allowed on this page
+  const reviewParam = norm(params.get('review') || params.get('branch'));           // branch to preselect for review
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -352,7 +356,13 @@
       $('panel-' + n).hidden = n !== name;
     });
     // Keep the URL in sync; ignored where the browser blocks it (for example inside a preview iframe)
-    try { history.replaceState(null, '', name === 'connect' ? '#connect' : location.pathname + location.search); } catch (e) {}
+    // City / review params stay in the URL; social=true marks the connect tab so a reload opens the same tab
+    try {
+      const q = new URLSearchParams(location.search);
+      if (name === 'connect') q.set('social', 'true'); else q.delete('social');
+      const qs = q.toString().replace(/%2C/gi, ',');
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    } catch (e) {}
   }
   $('tab-branches').addEventListener('click', () => selectTab('branches'));
   $('tab-connect').addEventListener('click', () => selectTab('connect'));
@@ -386,7 +396,7 @@
     // Remember where each row is now, so rows can glide to their new place after re-sorting or filtering
     const prevTop = new Map();
     $('list').querySelectorAll('li[data-id]').forEach(li => prevTop.set(li.dataset.id, li.getBoundingClientRect().top));
-    const cityOK = c => !branchSel.size || branchSel.has(c);
+    const cityOK = c => scopeCities.includes(c) && (!branchSel.size || branchSel.has(c));
     let items = BRANCHES.filter(b => cityOK(b.city)).map(b => ({ b, d: distances && distances[b.id] != null ? distances[b.id] : null }));
     if (distances) items.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
     const nearestId = distances && items[0].d != null ? items[0].b.id : null;
@@ -426,7 +436,8 @@
     if (!html) $('empty').textContent = q ? 'No branch matches "' + $('search').value.trim() + '". Try an area name such as Jhotwara or VKI.' : 'No branches here yet.';
   }
   $('search').addEventListener('input', renderBranches);
-  paintBranchChips = makeChips('branch-chips', [{ id: 'all', label: 'All' }, ...Object.keys(BRANCH_CITIES).map(k => ({ id: k, label: BRANCH_CITIES[k] }))], branchSel, renderBranches);
+  paintBranchChips = makeChips('branch-chips', [{ id: 'all', label: 'All' }, ...scopeCities.map(k => ({ id: k, label: BRANCH_CITIES[k] }))], branchSel, renderBranches);
+  if (scopeCities.length < 2) $('branch-chips').style.display = 'none';   // a single city needs no filter chips
 
   function setStatus(msg, err) { $('status').textContent = msg; $('status').classList.toggle('error', !!err); }
   function straightLine(lat1, lon1, lat2, lon2) {
@@ -473,9 +484,7 @@
   const YT_URL = 'https://www.youtube.com/@rjmobileindia/shorts';
   const WA_URL = 'https://whatsapp.com/channel/0029VbCYXVB545v1l2Bme81S';
   /* Scope chip for "Review and follow": all | main | a city. URL params only pick the starting chip / limit which cities are offered. */
-  const urlCities = cityList.filter(c => BRANCH_CITIES[c]);
-  const scopeCities = urlCities.length ? urlCities : Object.keys(BRANCH_CITIES);
-  const bpn0 = norm(params.get('branch'));
+  const bpn0 = reviewParam;
   const followSel = new Set(cityList.includes('all') ? [] : urlCities.length ? urlCities : (BRANCH_CITIES[bpn0] ? [bpn0] : ['main']));   // empty = All
   const accountsFor = () => { const all = !followSel.size; return [...(all || followSel.has('main') ? [MAIN] : []), ...CITIES.filter(c => scopeCities.includes(c.id) && (all || followSel.has(c.id)))]; };
   const ICONS = {
@@ -584,7 +593,7 @@
   /* ============ REVIEW BRANCH PICKER ============ */
   let reviewFirstLoad = true;
   function renderReviewBranches() {
-    const select = $('branch-select'), bpn = norm(params.get('branch'));
+    const select = $('branch-select'), bpn = reviewParam;
     const first = reviewFirstLoad; reviewFirstLoad = false;
     const pickedCities = [...followSel].filter(k => BRANCH_CITIES[k]);
     const inScope = c => scopeCities.includes(c) && (!pickedCities.length || pickedCities.includes(c));
@@ -677,7 +686,8 @@
   }
 
   /* ============ INIT ============ */
-  const liveCount = BRANCHES.filter(b => !b.soon).length, soonCount = BRANCHES.length - liveCount + UPCOMING.length;
+  const scopedBranches = BRANCHES.filter(b => scopeCities.includes(b.city));
+  const liveCount = scopedBranches.filter(b => !b.soon).length, soonCount = scopedBranches.length - liveCount + UPCOMING.filter(u => scopeCities.includes(u.city)).length;
   const footer = liveCount + ' branches' + (soonCount ? ', ' + soonCount + ' more coming soon' : '');
   $('footer').textContent = footer;
   renderBranches();
@@ -689,10 +699,12 @@
   $('manual-go').addEventListener('click', () => openMaps(pendingUrl || (BRANCHES.find(b => b.id === $('branch-select').value) || {}).review));
   $('reset-btn').addEventListener('click', () => { doneState = {}; saveDone(doneState); $('manual').style.display = 'none'; restoreDone(); showToast('Progress has been reset'); });
   restoreDone();
-  // Landing tab: ?tab=branches or ?tab=connect wins; otherwise ?city / ?branch / #connect open "Review and follow"
+  // Landing tab: only ?social=true opens "Review and follow". ?social=false, a missing param or any other value opens "Branches".
+  // city / review / branch never change the tab. (Old links with ?tab=connect or #connect still work when there is no social param.)
   const tabParam = (params.get('tab') || '').toLowerCase();
-  if (tabParam === 'branches') selectTab('branches');
-  else if (tabParam === 'connect' || params.has('city') || params.has('branch') || location.hash === '#connect') selectTab('connect');
+  const socialOn = ['true', '1', 'yes', 'y', 'on'].includes((params.get('social') || '').trim().toLowerCase());
+  const openConnect = params.has('social') ? socialOn : (tabParam === 'connect' || (tabParam !== 'branches' && location.hash === '#connect'));
+  if (openConnect) selectTab('connect');
   window.addEventListener('pageshow', e => { if (e.persisted) { doneState = loadDone(); restoreDone(); renderBranches(); } });
 </script>
 </body>
